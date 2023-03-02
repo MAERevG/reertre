@@ -1,0 +1,120 @@
+//+------------------------------------------------------------------+
+//|                                                    InsBarExpert.mq4 |
+//|                                              Copyright 2023, Me    |
+//|                                                        https://me.com |
+//+------------------------------------------------------------------+
+#property copyright "Copyright 2023, Me"
+#property link      "https://me.com"
+#property version   "1.0"
+#property strict
+ 
+// Импорт индикатора
+#import "insbar.ex4"
+   int   iCustom(NULL,string,ENUM_APPLIED_PRICE,int,int);
+   double iCustom(NULL,string,ENUM_APPLIED_PRICE,int,int,int);
+   bool  iCustom(NULL,string,ENUM_APPLIED_PRICE,int,int,int,double&);
+#import
+ 
+// Объявление переменных
+double lotSize = 0.1;
+int MagicNumber = 123456;
+int orderTicket = 0;
+ 
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Регистрация индикатора
+    IndicatorShortName("InsBar");
+    IndicatorDigits(Digits);
+    IndicatorSetInteger(INDICATOR_DIGITS, Digits);
+    SetIndexStyle(0, DRAW_NONE);
+    SetIndexBuffer(0, NULL);
+    SetIndexLabel(0, NULL);
+ 
+    return(INIT_SUCCEEDED);
+}
+ 
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    // Снятие регистрации индикатора
+    IndicatorRelease();
+}
+ 
+//+------------------------------------------------------------------+
+//| Expert start function                                            |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    // Получение данных индикатора
+    double high = iCustom(NULL, "InsBar", PRICE_HIGH, 0, 0, 0);
+    double low = iCustom(NULL, "InsBar", PRICE_LOW, 0, 0, 0);
+    double close = iCustom(NULL, "InsBar", PRICE_CLOSE, 0, 0, 0);
+    double prevHigh = iCustom(NULL, "InsBar", PRICE_HIGH, 0, 1, 0);
+    double prevLow = iCustom(NULL, "InsBar", PRICE_LOW, 0, 1, 0);
+    double prevClose = iCustom(NULL, "InsBar", PRICE_CLOSE, 0, 1, 0);
+    double prevOpen = iCustom(NULL, "InsBar", PRICE_OPEN, 0, 1, 0);
+ 
+    // Если текущий бар является Inside Bar и предыдущий бар был Bullish Outside Bar, то покупаем
+    if (high < prevHigh && low > prevLow && close < prevClose && prevClose > prevOpen && orderTicket == 0) {
+        orderTicket = OrderSend(Symbol(), OP_BUY, lotSize, Ask, 3, 0, 0, "", MagicNumber, 0, Green);
+        if (orderTicket > 0) {
+            Print("Buy order opened with ticket #", orderTicket);
+        } else {
+            Print("Error opening buy order with error code ", GetLastError());
+        }
+    }
+ 
+    // Если текущий бар является Inside Bar и предыдущий бар был Bearish Outside Bar, то продаем
+    if (high < prevHigh && low > prevLow && close > prevClose && prevClose < prevOpen && orderTicket == 0) {
+orderTicket = OrderSend(Symbol(), OP_SELL, lotSize, Bid, 3, 0, 0, "", MagicNumber, 0, Red);
+if (orderTicket > 0) {
+Print("Sell order opened with ticket #", orderTicket);
+} else {
+Print("Error opening sell order with error code ", GetLastError());
+}
+}
+}
+ 
+//+------------------------------------------------------------------+
+//| Expert deinitialization function |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+// Снятие регистрации индикатора
+IndicatorRelease();
+}
+ 
+//+------------------------------------------------------------------+
+//| Expert initialization function |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+// Регистрация индикатора
+IndicatorShortName("InsBar");
+IndicatorDigits(Digits);
+IndicatorSetInteger(INDICATOR_DIGITS, Digits);
+SetIndexStyle(0, DRAW_NONE);
+SetIndexBuffer(0, NULL);
+SetIndexLabel(0, NULL);
+return(INIT_SUCCEEDED);
+}
+ 
+//+------------------------------------------------------------------+
+//| Custom indicator function |
+//+------------------------------------------------------------------+
+double insbar(int type, int shift)
+{
+return(iCustom(NULL, "InsBar", type, 0, shift, 0));
+}
+ 
+//+------------------------------------------------------------------+
+//| Custom indicator function with output parameter |
+//+------------------------------------------------------------------+
+bool insbar(int type, int shift, double& value)
+{
+return(iCustom(NULL, "InsBar", type, 0, shift, 0, value)); 
